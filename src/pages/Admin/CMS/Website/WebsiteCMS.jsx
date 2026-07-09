@@ -1,4 +1,4 @@
-import { MdOutlineLanguage } from "react-icons/md";
+import { MdOutlineLanguage, MdDynamicFeed } from "react-icons/md";
 import { useState } from "react";
 import HeroSectionCMS from "../HeroSection/HeroSectionCMS";
 import RoundSectionCMS from "../HeroSection/RoundSectionCMS";
@@ -11,6 +11,7 @@ import AboutStatsCMS from "../HeroSection/AboutStatsCMS";
 import AboutGenesisCMS from "../HeroSection/AboutGenesisCMS";
 import AboutMissionVisionCMS from "../HeroSection/AboutMissionVisionCMS";
 import AboutVisionaryCMS from "../HeroSection/AboutVisionaryCMS";
+import PlatformFeaturesCMS from "../HeroSection/PlatformFeaturesCMS"; // <-- Dynamic Component Import Kiya
 
 const DARK="#0d2d2a";
 
@@ -85,6 +86,8 @@ export default function WebsiteCMS(){
                     Hero Section
 
                 </button>
+
+              
 
                 <button
   onClick={() => setActive("Round")}
@@ -182,6 +185,19 @@ export default function WebsiteCMS(){
   About Statistics
 </button>
 
+
+  <button
+                  onClick={() => setActive("PlatformFeatures")}
+                  className={`w-full text-left rounded-xl px-4 py-3 mt-2 transition
+                  ${
+                    active === "PlatformFeatures"
+                      ? "bg-teal-600 text-white"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  Platform Features
+                </button>
+
 <button
   onClick={() => setActive("AboutGenesis")}
   className={`w-full text-left rounded-xl px-4 py-3 mt-2 transition
@@ -227,6 +243,11 @@ export default function WebsiteCMS(){
 
                 <HeroSectionCMS/>
                  }
+
+{/* Platform Features CMS Section View Router Condition Add Ho Gayi */}
+{active === "PlatformFeatures" && (
+  <PlatformFeaturesCMS />
+)}
 
 {active === "Round" && (
   <RoundSectionCMS />
