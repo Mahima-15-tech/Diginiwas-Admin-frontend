@@ -396,9 +396,10 @@ const deleteImage = async (imageNo) => {
               <MdOutlineImage size={45}/>
 
               <p className="mt-3">
-                No Image
+                No Image 
+                
               </p>
-
+<span>Image size 900 × 1800 px</span>
             </div>
 
           }
