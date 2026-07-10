@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "../../Services/axios";
-import { FiFilter, FiUpload, FiEye, FiEdit2, FiChevronDown, FiChevronUp, FiInfo } from "react-icons/fi";
+import { FiFilter, FiUpload, FiEye, FiEdit2, FiChevronDown, FiChevronUp, FiInfo, FiTrash2 } from "react-icons/fi"; // FiTrash2 add kiya yahan
 import { MdOutlineCheckCircle, MdOutlineAutoAwesome, MdTrendingUp } from "react-icons/md";
 import { BsRobot } from "react-icons/bs";
+
 
 import {
   FiX,
@@ -18,10 +19,7 @@ import {
   MdOutlinePhotoLibrary,
 } from "react-icons/md";
 
-
 const DARK = "#0d2d2a";
-
-
 
 function StatusBadge({ status }) {
   const isVerified = status === "VERIFIED";
@@ -78,27 +76,42 @@ function AIAssistant({ open, onClose }) {
 export default function PropertyManagement() {
   const [chatOpen, setChatOpen] = useState(false);
   const [properties, setProperties] = useState([]);
-const [loading, setLoading] = useState(true);
-const [previewOpen, setPreviewOpen] = useState(false);
-const [selectedProperty, setSelectedProperty] = useState(null);
-const [currentImage, setCurrentImage] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [currentImage, setCurrentImage] = useState(0);
 
-const getProperties = async () => {
-  try {
-    const res = await axios.get("/properties");
+  const getProperties = async () => {
+    try {
+      const res = await axios.get("/properties");
+      setProperties(res.data.properties);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setProperties(res.data.properties);
+  // Delete Property Handler function add kiya
+  const handleDeleteProperty = async (id) => {
+    if (window.confirm("Kya aap sach me is property ko delete karna chahte hain?")) {
+      try {
+        const res = await axios.delete(`/properties/${id}`);
+        if (res.data.success) {
+          alert("Property Deleted Successfully!");
+          // UI se deleted property remove karne ke liye state update ki
+          setProperties(properties.filter((property) => property._id !== id));
+        }
+      } catch (err) {
+        console.log(err);
+        alert(err.response?.data?.message || "Property delete karne me dikkat aayi.");
+      }
+    }
+  };
 
-  } catch (err) {
-    console.log(err);
-  } finally {
-    setLoading(false);
-  }
-};
-
-useEffect(() => {
-  getProperties();
-}, []);
+  useEffect(() => {
+    getProperties();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans relative">
@@ -132,18 +145,14 @@ useEffect(() => {
               </thead>
               <tbody>
                 {properties.map((p, i) => (
-                  <tr key={p.id} className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${i === properties.length - 1 ? "border-0" : ""}`}>
+                  <tr key={p._id || p.id} className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${i === properties.length - 1 ? "border-0" : ""}`}>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                      <img
-  src={
-    p.images?.length
-      ? p.images[0].url
-      : "https://via.placeholder.com/120"
-  }
-  alt={p.title}
-  className="w-12 h-12 rounded-xl object-cover shrink-0"
-/>
+                        <img
+                          src={p.images?.length ? p.images[0].url : "https://via.placeholder.com/120"}
+                          alt={p.title}
+                          className="w-12 h-12 rounded-xl object-cover shrink-0"
+                        />
                         <div>
                           <p className="text-sm font-bold text-gray-900">{p.title}</p>
                           <p className="text-xs text-gray-400 mt-0.5">ID: {p.propertyId}</p>
@@ -156,33 +165,39 @@ useEffect(() => {
                     </td>
                     <td className="px-5 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">{p.price}</td>
                     <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-  <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold">
-    A
-  </div>
-
-  <span className="text-sm text-gray-700">
-    Admin
-  </span>
-</div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold">
+                          A
+                        </div>
+                        <span className="text-sm text-gray-700">Admin</span>
+                      </div>
                     </td>
-                    <td className="px-5 py-4 text-sm font-bold text-gray-900">{p.leads}  0</td>
+                    <td className="px-5 py-4 text-sm font-bold text-gray-900">{p.leads || 0}</td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                      <button
-  onClick={() => {
-    setSelectedProperty(p);
-    setPreviewOpen(true);
-  }}
-  className="p-1 hover:bg-gray-100 rounded-full"
->
-  <FiEye size={17} className="text-gray-500" />
-</button>
+                        <button
+                          onClick={() => {
+                            setSelectedProperty(p);
+                            setPreviewOpen(true);
+                          }}
+                          className="p-1 hover:bg-gray-100 rounded-full"
+                        >
+                          <FiEye size={17} className="text-gray-500" />
+                        </button>
                         <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
                           <FiEdit2 size={15} className="text-gray-500" />
                         </button>
                         <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
                           <MdOutlineCheckCircle size={19} className="text-teal-500" />
+                        </button>
+                        
+                        {/* DELETE BUTTON ADD KIYA YAHAN */}
+                        <button 
+                          onClick={() => handleDeleteProperty(p._id)} 
+                          className="p-1 hover:bg-red-50 rounded-full transition-colors"
+                          title="Delete Property"
+                        >
+                          <FiTrash2 size={16} className="text-red-500 hover:text-red-700" />
                         </button>
                       </div>
                     </td>
@@ -192,7 +207,7 @@ useEffect(() => {
             </table>
           </div>
           <div className="px-5 py-4 border-t border-gray-100">
-            <p className="text-sm font-semibold text-gray-500">Showing 1 to 3 of 152 Assets</p>
+            <p className="text-sm font-semibold text-gray-500">Showing 1 to {properties.length} of {properties.length} Assets</p>
           </div>
         </div>
 
@@ -201,10 +216,10 @@ useEffect(() => {
       <AIAssistant open={chatOpen} onClose={() => setChatOpen(false)} />
 
       <PropertyPreview
-    open={previewOpen}
-    property={selectedProperty}
-    onClose={() => setPreviewOpen(false)}
-/>
+        open={previewOpen}
+        property={selectedProperty}
+        onClose={() => setPreviewOpen(false)}
+      />
 
       <button
         onClick={() => setChatOpen(v => !v)}
@@ -217,6 +232,8 @@ useEffect(() => {
     </div>
   );
 }
+
+
 
 function PropertyPreview({
   open,

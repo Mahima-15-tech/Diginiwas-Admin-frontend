@@ -31,7 +31,54 @@ import MapPicker from "../../components/MapPicker";
  
 const DARK = "#0d2d2a";
 
- 
+ // TAGS/MOCK_IMAGES ke just niche ya PropertyIntakeForm ke bahar add karo
+const INITIAL_FORM_DATA = {
+  title: "",
+  transactionType: "Sale",
+  category: "",
+  status: "Draft",
+
+  projectName: "",
+  developerName: "",
+  description: "",
+
+  city: "",
+  locality: "",
+  pinCode: "",
+  address: "",
+
+  latitude: "",
+  longitude: "",
+
+  price: "",
+  pricePerSqft: "",
+  maintenance: "",
+  bookingAmount: "",
+
+  superBuiltupArea: "",
+  carpetArea: "",
+
+  bedrooms: "",
+  bathrooms: "",
+  balconies: "",
+  parking: "",
+
+  floorNo: "",
+  totalFloors: "",
+  facing: "",
+  furnishing: "",
+
+  videoLink: "",
+
+  amenities: [],
+  tags: [],
+  documents: [],
+
+  negotiable: false,
+
+  featured: false,
+  verified: false,
+};
 
 
 const TAGS = [
@@ -171,8 +218,14 @@ function PriceInput({
 
 function Toggle({ checked, onChange }) {
   return (
-    <button onClick={() => onChange && onChange(!checked)} className={`relative w-11 h-6 rounded-full transition-colors ${checked ? "bg-teal-500" : "bg-gray-300"}`}>
-      <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
+    <button
+      type="button"
+      onClick={() => onChange && onChange(!checked)}
+      className={`flex items-center w-11 h-6 rounded-full p-0.5 transition-colors duration-200 ${
+        checked ? "bg-teal-500 justify-end" : "bg-gray-300 justify-start"
+      }`}
+    >
+      <span className="w-5 h-5 bg-white rounded-full shadow" />
     </button>
   );
 }
@@ -250,9 +303,10 @@ function MediaAndTagsSections({
     if (tag.activeColor === "yellow") {
       return "border-2 border-yellow-400 text-yellow-600 bg-white";
     }
-    return "border border-gray-300 text-gray-700 bg-white";
+    // ✅ gray tags ke liye bhi ab alag active style
+    return "border-2 border-gray-800 text-gray-900 bg-gray-100";
   };
- 
+  
   const getTagIcon = (tag) => {
     const active = formData.tags.includes(tag.label);
     if (!active) return null;
@@ -262,8 +316,11 @@ function MediaAndTagsSections({
     if (tag.activeColor === "yellow") {
       return <MdAddCircleOutline size={16} className="text-yellow-500 flex-shrink-0" />;
     }
-    return null;
+    // ✅ gray tags pe bhi ab checkmark dikhega
+    return <MdCheckCircle size={16} className="text-gray-800 flex-shrink-0" />;
   };
+ 
+ 
 
   const deleteImage=(index)=>{
 
@@ -308,10 +365,10 @@ function MediaAndTagsSections({
               Drag and drop high-res property images
             </p>
             <p className="text-sm text-gray-400">
-              Maximum 25 images. Format: JPG, WEBP.
+            JPG, JPEG, PNG, WEBP only. Maximum 25 images.
             </p>
             <p className="text-sm text-gray-400">
-              Minimum 1920×1080px for premium listings.
+            Minimum 1920×1080px for premium listings.
             </p>
           </div>
           <label
@@ -435,64 +492,36 @@ onChange={(e)=>setVideo(e.target.files[0])}
 
 />
 
+<p className="text-xs text-gray-400 mt-1">
+    Allowed format: MP4, MOV, WEBM (max size as per server limit)
+  </p>
+
 </div>
             </div>
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-600 mb-2">
-              Documentation (PDF)
-            </p>
-            <div className="flex flex-wrap gap-3">
-            <label
-htmlFor="floorPlan"
-className="flex items-center gap-2 border rounded-full px-4 py-3 cursor-pointer"
->
+  <p className="text-sm font-semibold text-gray-600 mb-2">
+    Documentation (PDF)
+  </p>
+  <div className="flex flex-wrap gap-3">
+    <label htmlFor="floorPlan" className="flex items-center gap-2 border rounded-full px-4 py-3 cursor-pointer">
+      <MdOutlineDescription />
+      Floor Plan
+    </label>
+    <input hidden id="floorPlan" type="file" accept=".pdf" onChange={(e) => setFloorPlan(e.target.files[0])} />
 
-<MdOutlineDescription />
+    <label htmlFor="rera" className="flex items-center gap-2 border rounded-full px-4 py-3 cursor-pointer">
+      <MdOutlineVerified />
+      RERA Certificate
+    </label>
+    <input hidden id="rera" type="file" accept=".pdf" onChange={(e) => setReraCertificate(e.target.files[0])} />
+  </div>
 
-Floor Plan
-
-</label>
-
-<input
-
-hidden
-
-id="floorPlan"
-
-type="file"
-
-accept=".pdf"
-
-onChange={(e)=>setFloorPlan(e.target.files[0])}
-
-/>
-<label
-htmlFor="rera"
-className="flex items-center gap-2 border rounded-full px-4 py-3 cursor-pointer"
->
-
-<MdOutlineVerified />
-
-RERA Certificate
-
-</label>
-
-<input
-
-hidden
-
-id="rera"
-
-type="file"
-
-accept=".pdf"
-
-onChange={(e)=>setReraCertificate(e.target.files[0])}
-
-/>
-            </div>
-          </div>
+  {/* ✅ ye line add karo */}
+  <p className="text-xs text-gray-400 mt-2">
+    Only PDF format allowed for Floor Plan and RERA Certificate.
+  </p>
+</div>
         </div>
       </div>
  
@@ -537,55 +566,7 @@ const [floorPlan,setFloorPlan]=useState(null);
 const [reraCertificate,setReraCertificate]=useState(null);
 
 
-  const [formData,setFormData]=useState({
-
-    title:"",
-    transactionType:"Sale",
-    category:"",
-    status:"Draft",
-   
-    projectName:"",
-    developerName:"",
-    description:"",
-   
-    city:"",
-    locality:"",
-    pinCode:"",
-    address:"",
-   
-    latitude:"",
-    longitude:"",
-   
-    price:"",
-    pricePerSqft:"",
-    maintenance:"",
-    bookingAmount:"",
-   
-    superBuiltupArea:"",
-    carpetArea:"",
-   
-    bedrooms:"",
-    bathrooms:"",
-    balconies:"",
-    parking:"",
-   
-    floorNo:"",
-    totalFloors:"",
-    facing:"",
-    furnishing:"",
-   
-    videoLink:"",
-   
-    amenities:[],
-    tags:[],
-    documents:[],
-   
-    negotiable:false,
-   
-    featured:false,
-    verified:false
-   
-   });
+const [formData, setFormData] = useState(INITIAL_FORM_DATA);
 
   const [images, setImages] = useState([]);
 
@@ -607,27 +588,36 @@ const [reraCertificate,setReraCertificate]=useState(null);
       const data = new FormData();
   
       Object.keys(formData).forEach((key) => {
-        data.append(key, formData[key]);
+        const value = formData[key];
+        if (Array.isArray(value)) {
+          value.forEach((v) => data.append(key, v));
+        } else {
+          data.append(key, value);
+        }
       });
   
-      images.forEach((img) => {
-        data.append("images", img);
-      });
+      images.forEach((img) => data.append("images", img));
   
-    const res = await axios.post(
-  `${import.meta.env.VITE_API_BASE_URL}/properties`,
-  data,
-  {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  }
-);
+      if (floorPlan) data.append("floorPlan", floorPlan);
+      if (reraCertificate) data.append("reraCertificate", reraCertificate);
+      if (video) data.append("video", video);
+  
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/properties`,
+        data,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
   
       alert("Property Added Successfully");
-  
       console.log(res.data);
   
+      // ✅ Form ko poori tarah reset karo publish hone ke baad
+      setFormData(INITIAL_FORM_DATA);
+      setImages([]);
+      setVideo(null);
+      setVideoLink("");
+      setFloorPlan(null);
+      setReraCertificate(null);
     } catch (err) {
       console.log(err.response?.data || err.message);
     }
@@ -763,22 +753,27 @@ const [reraCertificate,setReraCertificate]=useState(null);
               <div>
                 <FieldLabel>Transaction Type</FieldLabel>
                 <div className="flex gap-2 mt-1">
-                  <button onClick={() =>
-  setFormData({
-    ...formData,
-    transactionType: "Sale",
-  })
-} className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${formData.transactionType === "Sale" ? "text-white border-transparent" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`} style={transactionType === "sale" ? { backgroundColor: "#0d2d2a", borderColor: "#0d2d2a" } : {}}>
-                    FOR SALE
-                  </button>
-                  <button onClick={() =>
-  setFormData({
-    ...formData,
-    transactionType: "Rent",
-  })
-} className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${formData.transactionType === "Rent" ? "text-white border-transparent" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"}`} style={transactionType === "rent" ? { backgroundColor: "#0d2d2a", borderColor: "#0d2d2a" } : {}}>
-                    FOR RENT
-                  </button>
+               
+
+<button
+  onClick={() => setFormData({ ...formData, transactionType: "Sale" })}
+  className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${
+    formData.transactionType === "Sale" ? "text-white border-transparent" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+  }`}
+  style={formData.transactionType === "Sale" ? { backgroundColor: "#0d2d2a", borderColor: "#0d2d2a" } : {}}
+>
+  FOR SALE
+</button>
+
+<button
+  onClick={() => setFormData({ ...formData, transactionType: "Rent" })}
+  className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-colors ${
+    formData.transactionType === "Rent" ? "text-white border-transparent" : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+  }`}
+  style={formData.transactionType === "Rent" ? { backgroundColor: "#0d2d2a", borderColor: "#0d2d2a" } : {}}
+>
+  FOR RENT
+</button>
                 </div>
               </div>
             </div>
@@ -872,7 +867,7 @@ const [reraCertificate,setReraCertificate]=useState(null);
               <div>
                 <FieldLabel>PIN Code</FieldLabel>
                 <Input
-  name="pincode"
+  name="pinCode"
   value={formData.pinCode}
   onChange={handleChange}
   placeholder="000000"
