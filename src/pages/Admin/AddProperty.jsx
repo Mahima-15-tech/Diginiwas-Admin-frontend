@@ -27,7 +27,7 @@ import {
 
 import MapPicker from "../../components/MapPicker";
 
-
+import Swal from "sweetalert2";
  
 const DARK = "#0d2d2a";
 
@@ -547,6 +547,9 @@ onChange={(e)=>setVideo(e.target.files[0])}
   );
 }
 
+
+
+
 export default function PropertyIntakeForm() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [transactionType, setTransactionType] = useState("sale");
@@ -583,45 +586,135 @@ const [formData, setFormData] = useState(INITIAL_FORM_DATA);
     setImages(Array.from(e.target.files));
   };
 
-  const handleSubmit = async () => {
-    try {
-      const data = new FormData();
-  
-      Object.keys(formData).forEach((key) => {
-        const value = formData[key];
-        if (Array.isArray(value)) {
-          value.forEach((v) => data.append(key, v));
-        } else {
-          data.append(key, value);
-        }
-      });
-  
-      images.forEach((img) => data.append("images", img));
-  
-      if (floorPlan) data.append("floorPlan", floorPlan);
-      if (reraCertificate) data.append("reraCertificate", reraCertificate);
-      if (video) data.append("video", video);
-  
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/properties`,
-        data,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-  
-      alert("Property Added Successfully");
-      console.log(res.data);
-  
-      // ✅ Form ko poori tarah reset karo publish hone ke baad
-      setFormData(INITIAL_FORM_DATA);
-      setImages([]);
-      setVideo(null);
-      setVideoLink("");
-      setFloorPlan(null);
-      setReraCertificate(null);
-    } catch (err) {
-      console.log(err.response?.data || err.message);
+
+const handleSubmit = async () => {
+  try {
+    const data = new FormData();
+
+    Object.keys(formData).forEach((key) => {
+      const value = formData[key];
+      if (Array.isArray(value)) {
+        value.forEach((v) => data.append(key, v));
+      } else {
+        data.append(key, value);
+      }
+    });
+
+    images.forEach((img) => data.append("images", img));
+
+    if (floorPlan) data.append("floorPlan", floorPlan);
+    if (reraCertificate) data.append("reraCertificate", reraCertificate);
+    if (video) data.append("video", video);
+
+    // ⏳ Uploading Loader SweetAlert
+    Swal.fire({
+      title: "Publishing Property...",
+      text: "Please wait while we upload your property details.",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/properties`,
+      data,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    // 🎉 SUCCESS SWEETALERT (DIGINIWAS Theme)
+    Swal.fire({
+      icon: "success",
+      title: "Property Added Successfully!",
+      text: "Your property listing is now published.",
+      confirmButtonColor: "#0d2d2a", // App theme color
+      confirmButtonText: "Great!",
+    });
+
+    console.log(res.data);
+
+    // ✅ Form Reset
+    setFormData(INITIAL_FORM_DATA);
+    setImages([]);
+    setVideo(null);
+    setVideoLink("");
+    setFloorPlan(null);
+    setReraCertificate(null);
+
+  }  catch (err) {
+  console.error(err.response?.data || err.message);
+
+  // 1. Backend Error Response Text Extract Karo
+  let errorMessage = "Failed to add property. Please check your inputs.";
+
+  if (err.response?.data?.message) {
+    let rawMsg = err.response.data.message;
+
+    // Agar Mongoose validation error message aati hai:
+    // "Property validation failed: title: Path `title` is required., category: Path `category` is required."
+    if (rawMsg.includes("Property validation failed:")) {
+      // Clean formatting: sirf required fields ka naam clean dikhao
+      errorMessage = rawMsg
+        .replace("Property validation failed:", "")
+        .replace(/Path `(\w+)` is required\./g, "• $1 is required")
+        .replaceAll(",", "\n");
+    } else {
+      errorMessage = rawMsg;
     }
-  };
+  }
+
+  // 2. SweetAlert Pop-up Show Karo
+  Swal.fire({
+    icon: "error",
+    title: "Validation Error",
+    text: errorMessage,
+    confirmButtonColor: "#e11d48", // Theme Red
+    confirmButtonText: "Fix Errors",
+    customClass: {
+      popup: 'rounded-2xl border border-rose-200 shadow-xl',
+    }
+  });
+}
+};
+  // const handleSubmit = async () => {
+  //   try {
+  //     const data = new FormData();
+  
+  //     Object.keys(formData).forEach((key) => {
+  //       const value = formData[key];
+  //       if (Array.isArray(value)) {
+  //         value.forEach((v) => data.append(key, v));
+  //       } else {
+  //         data.append(key, value);
+  //       }
+  //     });
+  
+  //     images.forEach((img) => data.append("images", img));
+  
+  //     if (floorPlan) data.append("floorPlan", floorPlan);
+  //     if (reraCertificate) data.append("reraCertificate", reraCertificate);
+  //     if (video) data.append("video", video);
+  
+  //     const res = await axios.post(
+  //       `${import.meta.env.VITE_API_BASE_URL}/properties`,
+  //       data,
+  //       { headers: { "Content-Type": "multipart/form-data" } }
+  //     );
+  
+  //     alert("Property Added Successfully");
+  //     console.log(res.data);
+  
+  //     // ✅ Form ko poori tarah reset karo publish hone ke baad
+  //     setFormData(INITIAL_FORM_DATA);
+  //     setImages([]);
+  //     setVideo(null);
+  //     setVideoLink("");
+  //     setFloorPlan(null);
+  //     setReraCertificate(null);
+  //   } catch (err) {
+  //     console.log(err.response?.data || err.message);
+  //   }
+  // };
 
   const toggleAmenity = (label) => {
 
