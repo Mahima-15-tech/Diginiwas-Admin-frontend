@@ -7,9 +7,6 @@ const API_BASE_URL =
 const LEAD_API =
   `${API_BASE_URL}/leads`;
 
-// ======================================================
-// BUYER PROPERTY BUTTON -> GENERATE LEAD
-// ======================================================
 
 export const createLeadFromPropertyApi =
   async (payload) => {
