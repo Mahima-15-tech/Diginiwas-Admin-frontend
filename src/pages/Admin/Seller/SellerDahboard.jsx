@@ -1,242 +1,641 @@
-// import { useState } from 'react';
-// import Seller from "./SellersManagement"
-// import SellerControlTower from './SellerProperty';
+// // import { useEffect, useState } from "react";
+// // import {
+// //   useLocation,
+// //   useNavigate,
+// // } from "react-router-dom";
 
-// // Dynamic tabs configuration
-// const navigationData = {
-//   'promotions': {
-//     label: 'Dashboard',
-//     subTabs: [
-//       { id: 'dashboard', label: 'Seller Management', component: <Seller /> },
-//     ]
-//   },
-//   // 'seller': {
-//   //   label: 'Seller Control Tower',
-//   //   subTabs: [
-//   //     { id: 'seller', label: 'Seller Control Tower', component: <SellerControlTower /> },
-//   //   ]
-//   // },
-// };
+// // import Seller from "./SellersManagement";
+// // import SellerControlTower from "./SellerProperty";
+
+// // export default function Dashboard() {
+// //   const location = useLocation();
+// //   const navigate = useNavigate();
+
+// //   const params = new URLSearchParams(location.search);
+
+// //   const requestedTab = params.get("tab");
+// //   const requestedSellerId = params.get("sellerId");
+
+// //   const [activeTab, setActiveTab] = useState(
+// //     requestedTab === "property"
+// //       ? "property"
+// //       : "promotions"
+// //   );
+
+// //   const [activeSubTab, setActiveSubTab] = useState(
+// //     requestedTab === "property"
+// //       ? "property"
+// //       : "dashboard"
+// //   );
+
+// //   useEffect(() => {
+// //     if (requestedTab === "property") {
+// //       setActiveTab("property");
+// //       setActiveSubTab("property");
+// //       return;
+// //     }
+
+// //     setActiveTab("promotions");
+// //     setActiveSubTab("dashboard");
+// //   }, [requestedTab]);
+
+// //   const navigationData = {
+// //     promotions: {
+// //       label: "Dashboard",
+// //       subTabs: [
+// //         {
+// //           id: "dashboard",
+// //           label: "Seller Management",
+// //           component: (
+// //             <Seller
+// //               embedded={true}
+// //               initialSellerId={requestedSellerId}
+// //               onEmbeddedDetailClose={() => {
+// //                 navigate(
+// //                   "/seller-dashboard?tab=dashboard",
+// //                   { replace: true }
+// //                 );
+// //               }}
+// //             />
+// //           ),
+// //         },
+// //       ],
+// //     },
+
+// //     // property: {
+// //     //   label: "Property Control Tower",
+// //     //   subTabs: [
+// //     //     {
+// //     //       id: "property",
+// //     //       label: "Property Control Tower",
+// //     //       component: <SellerControlTower />,
+// //     //     },
+// //     //   ],
+// //     // },
+// //   };
+
+// //   const currentCategory =
+// //     navigationData[activeTab] ||
+// //     navigationData.promotions;
+
+// //   const activeSubTabItem =
+// //     currentCategory.subTabs.find(
+// //       (subTab) => subTab.id === activeSubTab
+// //     ) || currentCategory.subTabs[0];
+
+// //   const activeComponent =
+// //     activeSubTabItem?.component;
+
+// //   const handleTab = (key) => {
+// //     const subTab =
+// //       navigationData[key].subTabs[0];
+
+// //     setActiveTab(key);
+// //     setActiveSubTab(subTab.id);
+
+// //     navigate(
+// //       key === "property"
+// //         ? "/seller-dashboard?tab=property"
+// //         : "/seller-dashboard?tab=dashboard",
+// //       { replace: true }
+// //     );
+// //   };
+
+// //   return (
+// //     <div className="min-h-screen space-y-2 p-1 text-[#24413E]">
+// //       <div className="flex items-center justify-between rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
+// //         <h1 className="text-2xl font-extrabold text-[#005F56]">
+// //           SELLERS SECTION
+// //         </h1>
+
+// //         <div className="rounded-full bg-[#005F56] px-4 py-1.5 text-xs font-semibold tracking-wide text-white shadow-sm">
+// //           Active: {activeSubTabItem?.label}
+// //         </div>
+// //       </div>
+
+// //       <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
+// //         <div className="flex flex-wrap gap-2.5">
+// //           {Object.keys(navigationData).map((key) => {
+// //             const isActive =
+// //               activeTab === key;
+
+// //             return (
+// //               <button
+// //                 key={key}
+// //                 type="button"
+// //                 onClick={() => handleTab(key)}
+// //                 className={`rounded-xl px-5 py-2.5 text-xs font-bold transition ${
+// //                   isActive
+// //                     ? "bg-[#005F56] text-white shadow-md"
+// //                     : "bg-[#F4F4F5] text-slate-600 hover:bg-slate-200/70"
+// //                 }`}
+// //               >
+// //                 {navigationData[key].label}
+// //               </button>
+// //             );
+// //           })}
+// //         </div>
+// //       </div>
+
+// //       <div className="transition-all duration-300">
+// //         {activeComponent}
+// //       </div>
+// //     </div>
+// //   );
+// // }
+
+
+// import { useEffect, useState } from "react";
+// import {
+//   useLocation,
+//   useNavigate,
+// } from "react-router-dom";
+// import {
+//   LayoutDashboard,
+//   Store,
+//   ChevronRight,
+//   UserRound,
+// } from "lucide-react";
+
+// import Seller from "./SellersManagement";
+// import SellerControlTower from "./SellerProperty";
 
 // export default function Dashboard() {
-//   const [activeTab, setActiveTab] = useState('promotions');
-//   const [activeSubTab, setActiveSubTab] = useState('dashboard');
+//   const location = useLocation();
+//   const navigate = useNavigate();
 
-//   const currentCategory = navigationData[activeTab];
-//   const activeSubTabItem = currentCategory.subTabs.find(st => st.id === activeSubTab) || currentCategory.subTabs[0];
-//   const activeComponent = activeSubTabItem?.component;
+//   const params = new URLSearchParams(location.search);
+
+//   const requestedTab = params.get("tab");
+//   const requestedSellerId = params.get("sellerId");
+
+//   const [activeTab, setActiveTab] = useState(
+//     requestedTab === "property"
+//       ? "property"
+//       : "promotions"
+//   );
+
+//   const [activeSubTab, setActiveSubTab] = useState(
+//     requestedTab === "property"
+//       ? "property"
+//       : "dashboard"
+//   );
+
+//   useEffect(() => {
+//     if (requestedTab === "property") {
+//       setActiveTab("property");
+//       setActiveSubTab("property");
+//       return;
+//     }
+
+//     setActiveTab("promotions");
+//     setActiveSubTab("dashboard");
+//   }, [requestedTab]);
+
+//   const navigationData = {
+//     promotions: {
+//       label: "Dashboard",
+//       icon: LayoutDashboard,
+//       subTabs: [
+//         {
+//           id: "dashboard",
+//           // label: "Seller Management",
+//           component: (
+//             <Seller
+//               embedded={true}
+//               initialSellerId={requestedSellerId}
+//               onEmbeddedDetailClose={() => {
+//                 navigate(
+//                   "/seller-dashboard?tab=dashboard",
+//                   { replace: true }
+//                 );
+//               }}
+//             />
+//           ),
+//         },
+//       ],
+//     },
+
+//     // property: {
+//     //   label: "Property Control Tower",
+//     //   icon: Store,
+//     //   subTabs: [
+//     //     {
+//     //       id: "property",
+//     //       label: "Property Control Tower",
+//     //       component: <SellerControlTower />,
+//     //     },
+//     //   ],
+//     // },
+//   };
+
+//   const currentCategory =
+//     navigationData[activeTab] ||
+//     navigationData.promotions;
+
+//   const activeSubTabItem =
+//     currentCategory.subTabs.find(
+//       (subTab) => subTab.id === activeSubTab
+//     ) || currentCategory.subTabs[0];
+
+//   const activeComponent =
+//     activeSubTabItem?.component;
+
+//   const isSellerDetail = Boolean(requestedSellerId);
+
+//   const handleTab = (key) => {
+//     const subTab =
+//       navigationData[key].subTabs[0];
+
+//     setActiveTab(key);
+//     setActiveSubTab(subTab.id);
+
+//     navigate(
+//       key === "property"
+//         ? "/seller-dashboard?tab=property"
+//         : "/seller-dashboard?tab=dashboard",
+//       { replace: true }
+//     );
+//   };
+
+//   const goToSellerManagement = () => {
+//     setActiveTab("promotions");
+//     setActiveSubTab("dashboard");
+//     navigate(
+//       "/seller-dashboard?tab=dashboard",
+//       { replace: true }
+//     );
+//   };
 
 //   return (
-//     <div className="min-h-screen  p-1 space-y-2 text-[#24413E]">
-//       {/* Top Header Card */}
-//       <div className="bg-white p-6 rounded-2xl flex justify-between items-center border border-slate-200/60 shadow-sm">
-//         <div>
-//           <h1 className="text-2xl font-extrabold text-[#005F56] mt-0.5">
-//             SELLERS SECTION
-//           </h1>
-//         </div>
-//         <div className="bg-[#005F56] text-white px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide shadow-sm">
-//           Active: {activeSubTabItem?.label}
-//         </div>
-//       </div>
+//     <div className="min-h-screen bg-[#F4F7F8] text-[#173247]">
+//       <div className="space-y-3 p-2 md:p-3">
+//         {/* ================= HEADER ================= */}
+//         <div className="relative overflow-hidden rounded-[20px] bg-[#1F3C50] px-5 py-5 shadow-sm md:px-7">
+//           <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-[#35C99A]/10" />
+//           <div className="pointer-events-none absolute -bottom-20 right-24 h-40 w-40 rounded-full bg-white/5" />
 
-//       {/* Navigation Card */}
-//       <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
-//         {/* Main Category Tabs */}
-//         <div className="flex gap-2.5 pb-2">
-//           {Object.keys(navigationData).map((key) => {
-//             const isActive = activeTab === key;
-//             return (
-//               <button
-//                 key={key}
-//                 onClick={() => {
-//                   setActiveTab(key);
-//                   setActiveSubTab(navigationData[key].subTabs[0].id);
-//                 }}
-//                 className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
-//                   isActive
-//                     ? 'bg-[#005F56] text-white shadow-md shadow-[#005F56]/20'
-//                     : 'bg-[#F4F4F5] text-slate-600 hover:bg-slate-200/70'
-//                 }`}
-//               >
-//                 {navigationData[key].label}
-//               </button>
-//             );
-//           })}
-//         </div>
+//           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+//             <div className="flex items-center gap-3">
+//               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#35C99A] text-white shadow-sm">
+//                 <Store size={21} strokeWidth={2.2} />
+//               </div>
 
-//         {/* Sub Navigation Chips */}
-//         {currentCategory.subTabs.length > 1 && (
-//           <div className="flex gap-2 pt-1 border-t border-slate-100">
-//             {currentCategory.subTabs.map((subTab) => {
-//               const isSubActive = activeSubTab === subTab.id;
-//               return (
-//                 <button
-//                   key={subTab.id}
-//                   onClick={() => setActiveSubTab(subTab.id)}
-//                   className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
-//                     isSubActive
-//                       ? 'bg-[#E6F4F1] text-[#005F56] border border-[#005F56]/30'
-//                       : 'bg-[#F4F4F5] text-slate-500 hover:bg-slate-200/60 hover:text-slate-800'
-//                   }`}
-//                 >
-//                   {subTab.label}
-//                 </button>
-//               );
-//             })}
+//               <div>
+//                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9FB3C0]">
+//                   DigiNiwas Admin
+//                 </p>
+
+//                 <h1 className="mt-0.5 text-xl font-bold tracking-tight text-white md:text-2xl">
+//                   Seller Management
+//                 </h1>
+
+//                 <p className="mt-1 text-xs text-[#C3D0D8]">
+//                   Manage sellers, verification, portfolios and property activity
+//                 </p>
+//               </div>
+//             </div>
+
+//             <div className="flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2 backdrop-blur-sm">
+//               <div className="h-2 w-2 rounded-full bg-[#35C99A]" />
+
+//               <div>
+//                 <p className="text-[9px] font-medium uppercase tracking-wide text-[#AFC0CA]">
+//                   Current View
+//                 </p>
+
+//                 <p className="text-xs font-semibold text-white">
+//                   {isSellerDetail
+//                     ? "Seller Details"
+//                     : activeSubTabItem?.label || "Seller Management"}
+//                 </p>
+//               </div>
+//             </div>
 //           </div>
-//         )}
-//       </div>
+//         </div>
 
-//       {/* Dynamic Content Container */}
-//       <div className="transition-all duration-300">
-//         {activeComponent}
+//         {/* ================= NAVIGATION ================= */}
+//         <div className="rounded-[18px] border border-[#DCE5E9] bg-white px-4 py-3 shadow-[0_4px_18px_rgba(15,47,69,0.04)]">
+//           <div className="flex flex-wrap items-center justify-between gap-3">
+//             <div className="flex flex-wrap items-center gap-2">
+//               {Object.keys(navigationData).map((key) => {
+//                 const isActive = activeTab === key;
+//                 const Icon =
+//                   navigationData[key].icon ||
+//                   LayoutDashboard;
+
+//                 return (
+//                   <button
+//                     key={key}
+//                     type="button"
+//                     onClick={() => handleTab(key)}
+//                     className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 ${
+//                       isActive
+//                         ? "bg-[#1F3C50] text-white shadow-sm"
+//                         : "bg-[#F2F6F7] text-[#667B88] hover:bg-[#EAF9F4] hover:text-[#15966F]"
+//                     }`}
+//                   >
+//                     <Icon size={15} />
+//                     {navigationData[key].label}
+//                   </button>
+//                 );
+//               })}
+
+//               {/* {currentCategory?.subTabs?.map((subTab) => {
+//                 const isSubActive =
+//                   activeSubTab === subTab.id &&
+//                   !isSellerDetail;
+
+//                 return (
+//                   <button
+//                     key={subTab.id}
+//                     type="button"
+//                     onClick={() => {
+//                       setActiveSubTab(subTab.id);
+//                       navigate(
+//                         "/seller-dashboard?tab=dashboard",
+//                         { replace: true }
+//                       );
+//                     }}
+//                     className={`rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 ${
+//                       isSubActive
+//                         ? "border border-[#35C99A]/30 bg-[#EAF9F4] text-[#15966F]"
+//                         : "text-[#758894] hover:bg-[#F5F8F9]"
+//                     }`}
+//                   >
+//                     {subTab.label}
+//                   </button>
+//                 );
+//               })} */}
+//             </div>
+
+//             {isSellerDetail && (
+//               <div className="flex items-center gap-1.5 rounded-lg bg-[#F4F7F8] px-3 py-2">
+//                 <button
+//                   type="button"
+//                   onClick={goToSellerManagement}
+//                   className="text-[11px] font-semibold text-[#15966F] transition hover:text-[#117657]"
+//                 >
+//                   Sellers
+//                 </button>
+
+//                 <ChevronRight
+//                   size={12}
+//                   className="text-[#A7B5BD]"
+//                 />
+
+//                 <span className="flex items-center gap-1 text-[11px] font-semibold text-[#526A78]">
+//                   <UserRound size={12} />
+//                   Details
+//                 </span>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* ================= CONTENT ================= */}
+//         <div className="min-w-0 transition-all duration-300">
+//           {activeComponent}
+//         </div>
 //       </div>
 //     </div>
 //   );
 // }
 
-import { useEffect, useState } from "react";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
 
+import {
+  LayoutDashboard,
+  Store,
+  FileCheck2,
+  ChevronRight,
+  UserRound,
+} from "lucide-react";
+
 import Seller from "./SellersManagement";
-import SellerControlTower from "./SellerProperty";
+import SellerApplications from "./SellerApplications";
 
 export default function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const params = new URLSearchParams(location.search);
+  const params =
+    new URLSearchParams(
+      location.search
+    );
 
-  const requestedTab = params.get("tab");
-  const requestedSellerId = params.get("sellerId");
+  const requestedTab =
+    params.get("tab") ||
+    "management";
 
-  const [activeTab, setActiveTab] = useState(
-    requestedTab === "property"
-      ? "property"
-      : "promotions"
-  );
+  const requestedSellerId =
+    params.get("sellerId");
 
-  const [activeSubTab, setActiveSubTab] = useState(
-    requestedTab === "property"
-      ? "property"
-      : "dashboard"
-  );
+  const [activeTab, setActiveTab] =
+    useState(
+      requestedTab ===
+        "applications"
+        ? "applications"
+        : "management"
+    );
 
   useEffect(() => {
-    if (requestedTab === "property") {
-      setActiveTab("property");
-      setActiveSubTab("property");
-      return;
-    }
-
-    setActiveTab("promotions");
-    setActiveSubTab("dashboard");
+    setActiveTab(
+      requestedTab ===
+        "applications"
+        ? "applications"
+        : "management"
+    );
   }, [requestedTab]);
 
   const navigationData = {
-    promotions: {
-      label: "Dashboard",
-      subTabs: [
-        {
-          id: "dashboard",
-          label: "Seller Management",
-          component: (
-            <Seller
-              embedded={true}
-              initialSellerId={requestedSellerId}
-              onEmbeddedDetailClose={() => {
-                navigate(
-                  "/seller-dashboard?tab=dashboard",
-                  { replace: true }
-                );
-              }}
-            />
-          ),
-        },
-      ],
+    management: {
+      label: "Seller Management",
+      icon: LayoutDashboard,
+      component: (
+        <Seller
+          embedded={true}
+          initialSellerId={
+            requestedSellerId
+          }
+          onEmbeddedDetailClose={() => {
+            navigate(
+              "/seller-dashboard?tab=management",
+              { replace: true }
+            );
+          }}
+        />
+      ),
     },
 
-    // property: {
-    //   label: "Property Control Tower",
-    //   subTabs: [
-    //     {
-    //       id: "property",
-    //       label: "Property Control Tower",
-    //       component: <SellerControlTower />,
-    //     },
-    //   ],
-    // },
+    applications: {
+      label: "Seller Applications",
+      icon: FileCheck2,
+      component: (
+        <SellerApplications />
+      ),
+    },
   };
 
-  const currentCategory =
+  const activeItem =
     navigationData[activeTab] ||
-    navigationData.promotions;
+    navigationData.management;
 
-  const activeSubTabItem =
-    currentCategory.subTabs.find(
-      (subTab) => subTab.id === activeSubTab
-    ) || currentCategory.subTabs[0];
-
-  const activeComponent =
-    activeSubTabItem?.component;
+  const isSellerDetail =
+    Boolean(requestedSellerId);
 
   const handleTab = (key) => {
-    const subTab =
-      navigationData[key].subTabs[0];
-
     setActiveTab(key);
-    setActiveSubTab(subTab.id);
 
     navigate(
-      key === "property"
-        ? "/seller-dashboard?tab=property"
-        : "/seller-dashboard?tab=dashboard",
+      `/seller-dashboard?tab=${key}`,
       { replace: true }
     );
   };
 
+  const goToSellerManagement =
+    () => {
+      navigate(
+        "/seller-dashboard?tab=management",
+        { replace: true }
+      );
+    };
+
   return (
-    <div className="min-h-screen space-y-2 p-1 text-[#24413E]">
-      <div className="flex items-center justify-between rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-extrabold text-[#005F56]">
-          SELLERS SECTION
-        </h1>
+    <div className="min-h-screen bg-[#F4F7F8] text-[#173247]">
+      <div className="space-y-3 p-2 md:p-3">
+        {/* HEADER */}
+        <div className="relative overflow-hidden rounded-[20px] bg-[#1F3C50] px-5 py-5 shadow-sm md:px-7">
+          <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-[#35C99A]/10" />
+          <div className="pointer-events-none absolute -bottom-20 right-24 h-40 w-40 rounded-full bg-white/5" />
 
-        <div className="rounded-full bg-[#005F56] px-4 py-1.5 text-xs font-semibold tracking-wide text-white shadow-sm">
-          Active: {activeSubTabItem?.label}
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#35C99A] text-white shadow-sm">
+                <Store
+                  size={21}
+                  strokeWidth={2.2}
+                />
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#9FB3C0]">
+                  DigiNiwas Admin
+                </p>
+
+                <h1 className="mt-0.5 text-xl font-bold tracking-tight text-white md:text-2xl">
+                  Seller Management
+                </h1>
+
+                <p className="mt-1 text-xs text-[#C3D0D8]">
+                  Review applications, approve sellers and manage approved seller accounts
+                </p>
+              </div>
+            </div>
+
+            <div className="flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2 backdrop-blur-sm">
+              <div className="h-2 w-2 rounded-full bg-[#35C99A]" />
+
+              <div>
+                <p className="text-[9px] font-medium uppercase tracking-wide text-[#AFC0CA]">
+                  Current View
+                </p>
+
+                <p className="text-xs font-semibold text-white">
+                  {isSellerDetail
+                    ? "Seller Details"
+                    : activeItem.label}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap gap-2.5">
-          {Object.keys(navigationData).map((key) => {
-            const isActive =
-              activeTab === key;
+        {/* NAVIGATION */}
+        <div className="rounded-[18px] border border-[#DCE5E9] bg-white px-4 py-3 shadow-[0_4px_18px_rgba(15,47,69,0.04)]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {Object.entries(
+                navigationData
+              ).map(
+                ([
+                  key,
+                  item,
+                ]) => {
+                  const Icon =
+                    item.icon;
 
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => handleTab(key)}
-                className={`rounded-xl px-5 py-2.5 text-xs font-bold transition ${
-                  isActive
-                    ? "bg-[#005F56] text-white shadow-md"
-                    : "bg-[#F4F4F5] text-slate-600 hover:bg-slate-200/70"
-                }`}
-              >
-                {navigationData[key].label}
-              </button>
-            );
-          })}
+                  const isActive =
+                    activeTab ===
+                    key &&
+                    !isSellerDetail;
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() =>
+                        handleTab(
+                          key
+                        )
+                      }
+                      className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 ${
+                        isActive
+                          ? "bg-[#1F3C50] text-white shadow-sm"
+                          : "bg-[#F2F6F7] text-[#667B88] hover:bg-[#EAF9F4] hover:text-[#15966F]"
+                      }`}
+                    >
+                      <Icon
+                        size={15}
+                      />
+                      {item.label}
+                    </button>
+                  );
+                }
+              )}
+            </div>
+
+            {isSellerDetail && (
+              <div className="flex items-center gap-1.5 rounded-lg bg-[#F4F7F8] px-3 py-2">
+                <button
+                  type="button"
+                  onClick={
+                    goToSellerManagement
+                  }
+                  className="text-[11px] font-semibold text-[#15966F]"
+                >
+                  Sellers
+                </button>
+
+                <ChevronRight
+                  size={12}
+                  className="text-[#A7B5BD]"
+                />
+
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-[#526A78]">
+                  <UserRound
+                    size={12}
+                  />
+                  Details
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="transition-all duration-300">
-        {activeComponent}
+        {/* CONTENT */}
+        <div className="min-w-0">
+          {activeItem.component}
+        </div>
       </div>
     </div>
   );

@@ -1,842 +1,1437 @@
-import React, { useMemo, useState } from "react";
+
+
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import {
   Search,
-  SlidersHorizontal,
-  ChevronDown,
-  MoreVertical,
-  FileText,
-  User,
-  AlertCircle,
-  CheckCircle2,
-  Clock3,
   Eye,
+  CheckCircle2,
+  Building2,
+  Radio,
+  UserCheck,
+  AlertCircle,
+  X,
+  MapPin,
+  IndianRupee,
+  Ruler,
+  BedDouble,
+  Bath,
+  Car,
+  Layers3,
+  Compass,
+  Sofa,
+  FileText,
+  Image as ImageIcon,
+  Video,
+  ExternalLink,
+  RefreshCw,
+  LoaderCircle,
+  BadgeCheck,
+  UserRound,
 } from "lucide-react";
 
-const summaryCards = [
-  {
-    id: 1,
-    title: "TOTAL QUEUE",
-    value: 248,
-    dot: "bg-[#667085]",
-    valueColor: "text-[#17324D]",
-  },
-  {
-    id: 2,
-    title: "PENDING",
-    value: 86,
-    dot: "bg-[#F79009]",
-    valueColor: "text-[#D97706]",
-  },
-  {
-    id: 3,
-    title: "IN REVIEW",
-    value: 42,
-    dot: "bg-[#3B82F6]",
-    valueColor: "text-[#2563EB]",
-  },
-  {
-    id: 4,
-    title: "VERIFIED",
-    value: 112,
-    dot: "bg-[#12B76A]",
-    valueColor: "text-[#079455]",
-  },
-  {
-    id: 5,
-    title: "ACTION REQ.",
-    value: 15,
-    dot: "bg-[#F04438]",
-    valueColor: "text-[#D92D20]",
-  },
-];
+import Swal from "sweetalert2";
 
-const tabs = [
-  "All",
-  "Pending",
-  "In Review",
-  "Verified",
-  "Action Required",
-  "Rejected",
-  "Overdue",
-];
+import {
+  getPropertyPublishingSummaryApi,
+  getReadyForFinalReviewPropertiesApi,
+  getLivePublishingPropertiesApi,
+  getFinalReviewPropertyApi,
+  makePropertyLiveApi,
+} from "../../../Services/propertyPublishingService";
 
-const properties = [
-  {
-    id: 1,
-    propertyId: "PROP-1001",
-    propertyName: "Luxury 3BHK Apartment",
-    location: "BKC Tower",
-    entityName: "Seller: R. Sharma",
-    entityType: "Private Seller",
-    documentCount: 5,
-    documents: [
-      { id: 1, status: "verified" },
-      { id: 2, status: "verified" },
-      { id: 3, status: "pending" },
-      { id: 4, status: "warning" },
-    ],
-    verificationProgress: 85,
-    criticalIssues: ["Missing Ownership Doc"],
-    reviewer: {
-      name: "A. Mehta",
-      initials: "AM",
-    },
-    status: "In Review",
-  },
-  {
-    id: 2,
-    propertyId: "PROP-1002",
-    propertyName: "Skyline Heights",
-    location: "Sea View",
-    entityName: "Seller: M. Patel",
-    entityType: "Private Seller",
-    documentCount: 6,
-    documents: [
-      { id: 1, status: "verified" },
-      { id: 2, status: "verified" },
-      { id: 3, status: "warning" },
-      { id: 4, status: "pending" },
-    ],
-    verificationProgress: 60,
-    criticalIssues: [
-      "Identity Pending",
-      "Address Mismatch",
-    ],
-    reviewer: null,
-    status: "Pending",
-  },
-  {
-    id: 3,
-    propertyId: "PROP-1003",
-    propertyName: "Green Valley Villa",
-    location: "Whitefield",
-    entityName: "Seller: N. Kapoor",
-    entityType: "Individual",
-    documentCount: 8,
-    documents: [
-      { id: 1, status: "verified" },
-      { id: 2, status: "verified" },
-      { id: 3, status: "verified" },
-      { id: 4, status: "verified" },
-    ],
-    verificationProgress: 100,
-    criticalIssues: [],
-    reviewer: {
-      name: "R. Kumar",
-      initials: "RK",
-    },
-    status: "Verified",
-  },
-  {
-    id: 4,
-    propertyId: "PROP-1004",
-    propertyName: "Prestige Residency",
-    location: "Electronic City",
-    entityName: "Developer: Prestige Group",
-    entityType: "Developer",
-    documentCount: 7,
-    documents: [
-      { id: 1, status: "verified" },
-      { id: 2, status: "warning" },
-      { id: 3, status: "pending" },
-      { id: 4, status: "pending" },
-    ],
-    verificationProgress: 45,
-    criticalIssues: ["RERA Document Missing"],
-    reviewer: {
-      name: "S. Verma",
-      initials: "SV",
-    },
-    status: "Action Required",
-  },
-];
+const formatMoney = (value) => {
+  const amount = Number(value || 0);
+
+  if (amount >= 10000000) {
+    return `₹${(amount / 10000000).toFixed(2)} Cr`;
+  }
+
+  if (amount >= 100000) {
+    return `₹${(amount / 100000).toFixed(2)} L`;
+  }
+
+  return `₹${amount.toLocaleString("en-IN")}`;
+};
+
+const formatDate = (value) => {
+  if (!value) return "—";
+
+  return new Date(value).toLocaleString(
+    "en-IN",
+    {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }
+  );
+};
 
 export default function PropertyVerificationCenter() {
-  const [activeTab, setActiveTab] = useState("All");
-  const [search, setSearch] = useState("");
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("All Status");
-  const [reviewerFilter, setReviewerFilter] = useState("All Reviewers");
+  const [activeTab, setActiveTab] =
+    useState("Ready for Final Review");
 
-  const filteredProperties = useMemo(() => {
-    return properties.filter((item) => {
-      const keyword = search.trim().toLowerCase();
-
-      const matchesSearch =
-        !keyword ||
-        item.propertyName.toLowerCase().includes(keyword) ||
-        item.propertyId.toLowerCase().includes(keyword) ||
-        item.location.toLowerCase().includes(keyword) ||
-        item.entityName.toLowerCase().includes(keyword);
-
-      const matchesTab =
-        activeTab === "All" || item.status === activeTab;
-
-      const matchesStatus =
-        statusFilter === "All Status" ||
-        item.status === statusFilter;
-
-      const matchesReviewer =
-        reviewerFilter === "All Reviewers" ||
-        item.reviewer?.name === reviewerFilter;
-
-      return (
-        matchesSearch &&
-        matchesTab &&
-        matchesStatus &&
-        matchesReviewer
-      );
+  const [summary, setSummary] =
+    useState({
+      readyForFinalReview: 0,
+      live: 0,
+      verifiedWithoutPartner: 0,
+      totalVerified: 0,
     });
-  }, [
-    search,
-    activeTab,
-    statusFilter,
-    reviewerFilter,
-  ]);
 
-  const toggleRow = (id) => {
-    setSelectedRows((prev) =>
-      prev.includes(id)
-        ? prev.filter((item) => item !== id)
-        : [...prev, id]
-    );
-  };
+  const [properties, setProperties] =
+    useState([]);
 
-  const toggleAll = () => {
-    if (
-      filteredProperties.length &&
-      filteredProperties.every((item) =>
-        selectedRows.includes(item.id)
-      )
-    ) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(
-        filteredProperties.map((item) => item.id)
+  const [search, setSearch] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [detailLoading, setDetailLoading] =
+    useState(false);
+
+  const [selectedDetail, setSelectedDetail] =
+    useState(null);
+
+  const [actionLoading, setActionLoading] =
+    useState(false);
+
+  const loadSummary = async () => {
+    try {
+      const response =
+        await getPropertyPublishingSummaryApi();
+
+      if (response?.success) {
+        setSummary(
+          response.data || {}
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Publishing summary error:",
+        error
       );
     }
   };
 
+  const loadProperties = async () => {
+    try {
+      setLoading(true);
+
+      const params = {
+        search:
+          search.trim() ||
+          undefined,
+      };
+
+      const response =
+        activeTab === "Live Properties"
+          ? await getLivePublishingPropertiesApi(
+              params
+            )
+          : await getReadyForFinalReviewPropertiesApi(
+              params
+            );
+
+      if (response?.success) {
+        setProperties(
+          response.data || []
+        );
+      } else {
+        setProperties([]);
+      }
+    } catch (error) {
+      console.error(
+        "Publishing properties error:",
+        error
+      );
+
+      setProperties([]);
+
+      Swal.fire({
+        icon: "error",
+        title:
+          "Unable to load properties",
+        text:
+          error?.response?.data?.message ||
+          "Property data could not be loaded.",
+        confirmButtonColor:
+          "#00796B",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSummary();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(
+      loadProperties,
+      250
+    );
+
+    return () =>
+      clearTimeout(timer);
+  }, [
+    activeTab,
+    search,
+  ]);
+
+  const refreshAll = async () => {
+    await Promise.all([
+      loadSummary(),
+      loadProperties(),
+    ]);
+  };
+
+  const openFinalReview = async (
+    propertyId
+  ) => {
+    try {
+      setDetailLoading(true);
+      setSelectedDetail(null);
+
+      const response =
+        await getFinalReviewPropertyApi(
+          propertyId
+        );
+
+      if (response?.success) {
+        setSelectedDetail(
+          response.data
+        );
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title:
+          "Unable to open final review",
+        text:
+          error?.response?.data?.message ||
+          "Property details could not be loaded.",
+        confirmButtonColor:
+          "#00796B",
+      });
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const makeLive = async () => {
+    const property =
+      selectedDetail?.property;
+
+    if (!property?._id) return;
+
+    const result =
+      await Swal.fire({
+        icon: "question",
+        title:
+          "Make Property Live?",
+        html: `
+          <div style="font-size:12px;color:#667085;line-height:1.7">
+            You are publishing
+            <strong>${property.title || property.propertyId}</strong>.
+            <br/>
+            It will become visible in the public live-property feed.
+          </div>
+        `,
+        input: "textarea",
+        inputPlaceholder:
+          "Optional final review notes...",
+        showCancelButton: true,
+        confirmButtonText:
+          "Final Review Complete & Make Live",
+        cancelButtonText:
+          "Cancel",
+        confirmButtonColor:
+          "#00796B",
+      });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+
+      const response =
+        await makePropertyLiveApi(
+          property._id,
+          {
+            notes:
+              result.value ||
+              "Final review completed by admin.",
+          }
+        );
+
+      if (response?.success) {
+        await Swal.fire({
+          icon: "success",
+          title:
+            "Property is Live",
+          text:
+            response.message,
+          confirmButtonColor:
+            "#00796B",
+        });
+
+        setSelectedDetail(null);
+
+        await refreshAll();
+
+        setActiveTab(
+          "Live Properties"
+        );
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title:
+          "Unable to make property Live",
+        text:
+          error?.response?.data?.message ||
+          "Final publishing failed.",
+        confirmButtonColor:
+          "#00796B",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const cards = useMemo(
+    () => [
+      {
+        title:
+          "READY FOR FINAL REVIEW",
+        value:
+          summary.readyForFinalReview ||
+          0,
+        icon: BadgeCheck,
+        description:
+          "Verified + partner assigned",
+      },
+      {
+        title:
+          "LIVE PROPERTIES",
+        value:
+          summary.live || 0,
+        icon: Radio,
+        description:
+          "Currently public",
+      },
+      {
+        title:
+          "VERIFIED TOTAL",
+        value:
+          summary.totalVerified ||
+          0,
+        icon: CheckCircle2,
+        description:
+          "Verification completed",
+      },
+      {
+        title:
+          "WAITING FOR PARTNER",
+        value:
+          summary.verifiedWithoutPartner ||
+          0,
+        icon: UserCheck,
+        description:
+          "Verified but no partner",
+      },
+    ],
+    [summary]
+  );
+
   return (
-    <div className="min-h-screen bg-[#F7FAF9] text-[#1D2939]">
-      <div className="mx-auto w-full max-w-[1700px] p-3 sm:p-4 lg:p-5">
-
-        {/* HEADER */}
-
-        <div className="mb-4">
-          <h1 className="text-[20px] font-semibold tracking-[-0.4px] text-[#101828] sm:text-[24px]">
-            Property Verification Center
+    <div className="min-h-screen  p-3 text-[#1D2939] sm:p-1">
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 rounded-xl border border-[#DCE5E3] bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-[20px] font-bold text-[#123942]">
+            Property Final Review & Publishing
           </h1>
 
-          <p className="mt-1 text-[10px] text-[#8993A0] sm:text-[11px]">
-            Monitor property verification progress, document
-            status, and verification exceptions.
+          <p className="mt-1 text-[11px] text-[#849497]">
+            Only verified properties with an assigned verified partner appear in the final review queue.
           </p>
         </div>
 
-        {/* SUMMARY CARDS */}
+        <button
+          type="button"
+          onClick={refreshAll}
+          className="flex h-9 w-fit items-center gap-2 rounded-lg border border-[#BFD8D2] bg-white px-3 text-[11px] font-semibold text-[#267D6D]"
+        >
+          <RefreshCw size={13} />
+          Refresh
+        </button>
+      </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-          {summaryCards.map((card) => (
+      {/* SUMMARY */}
+      <div className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {cards.map(
+          ({
+            title,
+            value,
+            icon: Icon,
+            description,
+          }) => (
             <div
-              key={card.id}
-              className="
-                rounded-[7px]
-                border border-[#DDE5E4]
-                bg-white
-                px-3 py-3
-                shadow-[0_1px_3px_rgba(16,24,40,0.04)]
-                sm:px-4 sm:py-4
-              "
+              key={title}
+              className="rounded-xl border border-[#DCE5E3] bg-white p-4 shadow-sm"
             >
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={`h-[5px] w-[5px] rounded-full ${card.dot}`}
-                />
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[8px] font-bold tracking-wide text-[#718087]">
+                    {title}
+                  </p>
 
-                <p className="text-[8px] font-semibold uppercase tracking-[0.04em] text-[#667085] sm:text-[9px]">
-                  {card.title}
-                </p>
+                  <p className="mt-2 text-[26px] font-bold text-[#173B45]">
+                    {value}
+                  </p>
+
+                  <p className="mt-1 text-[9px] text-[#94A1A4]">
+                    {description}
+                  </p>
+                </div>
+
+                <div className="rounded-lg bg-[#EAF8F4] p-2 text-[#12846F]">
+                  <Icon size={16} />
+                </div>
               </div>
-
-              <h2
-                className={`mt-2 text-[22px] font-semibold leading-none sm:text-[26px] ${card.valueColor}`}
-              >
-                {card.value}
-              </h2>
             </div>
+          )
+        )}
+      </div>
+
+      {/* CONTENT */}
+      <div className="mt-3 overflow-hidden rounded-xl border border-[#DCE5E3] bg-white shadow-sm">
+        {/* TABS */}
+        <div className="flex overflow-x-auto border-b border-[#E7EEEC]">
+          {[
+            "Ready for Final Review",
+            "Live Properties",
+          ].map((tab) => (
+            <button
+              type="button"
+              key={tab}
+              onClick={() =>
+                setActiveTab(tab)
+              }
+              className={`relative min-w-max px-5 py-3 text-[11px] font-semibold ${
+                activeTab === tab
+                  ? "text-[#087C69]"
+                  : "text-[#8A989C]"
+              }`}
+            >
+              {tab}
+
+              {activeTab === tab && (
+                <span className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full bg-[#087C69]" />
+              )}
+            </button>
           ))}
         </div>
 
-        {/* MAIN PANEL */}
+        {/* SEARCH */}
+        <div className="border-b border-[#E7EEEC] p-3">
+          <div className="relative max-w-[360px]">
+            <Search
+              size={13}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]"
+            />
 
-        <div className="mt-4 overflow-hidden rounded-[7px] border border-[#DCE5E3] bg-white shadow-[0_1px_3px_rgba(16,24,40,0.04)]">
-
-          {/* TABS */}
-
-          <div className="overflow-x-auto border-b border-[#E8EEEC]">
-            <div className="flex min-w-max items-center px-2 sm:px-3">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`
-                    relative h-10 px-3
-                    text-[9px] font-medium
-                    transition sm:px-4
-                    ${
-                      activeTab === tab
-                        ? "text-[#047568]"
-                        : "text-[#6F7D89] hover:text-[#344054]"
-                    }
-                  `}
-                >
-                  {tab}
-
-                  {activeTab === tab && (
-                    <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-[#00897B]" />
-                  )}
-                </button>
-              ))}
-            </div>
+            <input
+              value={search}
+              onChange={(event) =>
+                setSearch(
+                  event.target.value
+                )
+              }
+              placeholder="Search property ID, name, city, partner..."
+              className="h-9 w-full rounded-lg border border-[#D8E1DF] bg-white pl-9 pr-3 text-[11px] outline-none focus:border-[#5DAD9E]"
+            />
           </div>
+        </div>
 
-          {/* FILTER BAR */}
+        {/* TABLE */}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px]">
+            <thead>
+              <tr className="bg-[#073C5C] text-white">
+                <TableHead>
+                  Property
+                </TableHead>
 
-          <div className="flex flex-col gap-2 border-b border-[#E8EEEC] px-3 py-2.5 lg:flex-row lg:items-center lg:justify-between">
+                <TableHead>
+                  Location
+                </TableHead>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <TableHead>
+                  Assigned Partner
+                </TableHead>
 
-              <div className="relative w-full sm:w-[260px]">
-                <Search
-                  size={13}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#98A2B3]"
-                />
+                <TableHead>
+                  Verification
+                </TableHead>
 
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) =>
-                    setSearch(e.target.value)
-                  }
-                  placeholder="Search property..."
-                  className="
-                    h-8 w-full
-                    rounded-[5px]
-                    border border-[#D8DFE3]
-                    pl-8 pr-3
-                    text-[9px]
-                    outline-none
-                    placeholder:text-[#A8B0BA]
-                    focus:border-[#76AAA4]
-                  "
-                />
-              </div>
+                <TableHead>
+                  Media / Docs
+                </TableHead>
 
-              <button className="flex h-8 items-center justify-center gap-1.5 rounded-[5px] border border-[#D8DFE3] bg-white px-3 text-[9px] text-[#526271]">
-                <SlidersHorizontal size={12} />
-                Filters
-              </button>
-            </div>
+                <TableHead>
+                  Status
+                </TableHead>
 
-            <div className="flex flex-wrap gap-2">
-              <FilterSelect
-                value={statusFilter}
-                onChange={setStatusFilter}
-                options={[
-                  "All Status",
-                  "Pending",
-                  "In Review",
-                  "Verified",
-                  "Action Required",
-                  "Rejected",
-                  "Overdue",
-                ]}
-              />
+                <TableHead>
+                  Action
+                </TableHead>
+              </tr>
+            </thead>
 
-              <FilterSelect
-                value={reviewerFilter}
-                onChange={setReviewerFilter}
-                options={[
-                  "All Reviewers",
-                  "A. Mehta",
-                  "R. Kumar",
-                  "S. Verma",
-                ]}
-              />
-            </div>
-          </div>
-
-          {/* DESKTOP TABLE */}
-
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[950px] border-collapse">
-              <thead>
-                <tr className="bg-[#063446] text-white">
-                  <th className="w-[45px] px-3 py-3 text-left">
-                    <input
-                      type="checkbox"
-                      checked={
-                        filteredProperties.length > 0 &&
-                        filteredProperties.every((item) =>
-                          selectedRows.includes(item.id)
-                        )
-                      }
-                      onChange={toggleAll}
-                      className="h-3 w-3 accent-[#009688]"
-                    />
-                  </th>
-
-                  <TableHeading>Property</TableHeading>
-                  <TableHeading>Entities</TableHeading>
-                  <TableHeading>Documents</TableHeading>
-                  <TableHeading>
-                    Verification Progress
-                  </TableHeading>
-                  <TableHeading>
-                    Critical Issues
-                  </TableHeading>
-                  <TableHeading>Reviewer</TableHeading>
-
-                  <th className="w-[70px] px-3 py-3 text-center text-[8px] font-semibold uppercase">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredProperties.map((property) => (
-                  <tr
-                    key={property.id}
-                    className="
-                      border-b border-[#EDF1F0]
-                      bg-white
-                      transition
-                      last:border-b-0
-                      hover:bg-[#FAFCFB]
-                    "
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-16 text-center"
                   >
-                    <td className="px-3 py-4 align-top">
-                      <input
-                        type="checkbox"
-                        checked={selectedRows.includes(
-                          property.id
-                        )}
-                        onChange={() =>
-                          toggleRow(property.id)
-                        }
-                        className="h-3 w-3 accent-[#00897B]"
-                      />
-                    </td>
-
-                    {/* PROPERTY */}
-
-                    <td className="px-3 py-4 align-top">
-                      <div className="flex min-w-[160px] gap-2.5">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] bg-[#E9F3F7] text-[#45829B]">
-                          <FileText size={15} />
-                        </div>
-
-                        <div>
-                          <p className="max-w-[150px] text-[9px] font-semibold leading-[13px] text-[#23384D]">
-                            {property.propertyName}
-                          </p>
-
-                          <p className="mt-0.5 text-[8px] text-[#82909E]">
-                            {property.location}
-                          </p>
-
-                          <p className="mt-0.5 text-[7px] text-[#98A2AD]">
-                            {property.propertyId}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* ENTITY */}
-
-                    <td className="px-3 py-4 align-top">
-                      <div className="min-w-[130px]">
-                        <p className="text-[8px] font-medium text-[#405365]">
-                          {property.entityName}
-                        </p>
-
-                        <p className="mt-1 text-[8px] text-[#8B98A4]">
-                          {property.entityType}
-                        </p>
-                      </div>
-                    </td>
-
-                    {/* DOCUMENTS */}
-
-                    <td className="px-3 py-4 align-top">
-                      <div className="flex min-w-[115px] items-center gap-1">
-                        {property.documents.map((doc) => (
-                          <DocumentStatus
-                            key={doc.id}
-                            status={doc.status}
-                          />
-                        ))}
-
-                        <span className="ml-1 text-[8px] text-[#778695]">
-                          {property.documentCount}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* PROGRESS */}
-
-                    <td className="px-3 py-4 align-top">
-                      <div className="w-[160px]">
-                        <div className="mb-1 flex items-center justify-between">
-                          <span className="text-[8px] font-medium text-[#536576]">
-                            {property.verificationProgress}%
-                            complete
-                          </span>
-                        </div>
-
-                        <div className="h-[4px] overflow-hidden rounded-full bg-[#E8EFED]">
-                          <div
-                            style={{
-                              width: `${property.verificationProgress}%`,
-                            }}
-                            className={`
-                              h-full rounded-full
-                              ${
-                                property.verificationProgress ===
-                                100
-                                  ? "bg-[#12B76A]"
-                                  : "bg-[#009688]"
-                              }
-                            `}
-                          />
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* ISSUES */}
-
-                    <td className="px-3 py-4 align-top">
-                      <div className="flex max-w-[190px] flex-wrap gap-1">
-                        {property.criticalIssues.length >
-                        0 ? (
-                          property.criticalIssues.map(
-                            (issue, index) => (
-                              <span
-                                key={index}
-                                className="
-                                  inline-flex
-                                  rounded-full
-                                  border border-[#F7D6CF]
-                                  bg-[#FFF2EE]
-                                  px-2 py-[3px]
-                                  text-[7px]
-                                  font-medium
-                                  text-[#C65A42]
-                                "
-                              >
-                                {issue}
-                              </span>
-                            )
-                          )
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[8px] font-medium text-[#079455]">
-                            <CheckCircle2 size={11} />
-                            No Issues
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* REVIEWER */}
-
-                    <td className="px-3 py-4 align-top">
-                      {property.reviewer ? (
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E4EEF3] text-[7px] font-semibold text-[#315A70]">
-                            {property.reviewer.initials}
-                          </div>
-
-                          <span className="text-[8px] font-medium text-[#506172]">
-                            {property.reviewer.name}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-[8px] italic text-[#98A2B3]">
-                          Unassigned
-                        </span>
-                      )}
-                    </td>
-
-                    {/* ACTION */}
-
-                    <td className="px-3 py-4 align-top">
-                      <div className="flex justify-center gap-1">
-                        <button className="flex h-7 w-7 items-center justify-center rounded-md text-[#52717B] hover:bg-[#EEF7F5]">
-                          <Eye size={13} />
-                        </button>
-
-                        <button className="flex h-7 w-7 items-center justify-center rounded-md text-[#74828F] hover:bg-gray-100">
-                          <MoreVertical size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* MOBILE CARDS */}
-
-          <div className="md:hidden">
-            {filteredProperties.length === 0 ? (
-              <EmptyState />
-            ) : (
-              filteredProperties.map((property) => (
-                <div
-                  key={property.id}
-                  className="border-b border-[#EDF1F0] p-3 last:border-b-0"
-                >
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(
-                        property.id
-                      )}
-                      onChange={() =>
-                        toggleRow(property.id)
-                      }
-                      className="mt-1 h-4 w-4 accent-[#00897B]"
+                    <LoaderCircle
+                      size={20}
+                      className="mx-auto animate-spin text-[#0A8A72]"
                     />
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex min-w-0 gap-2">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#E9F3F7]">
-                            <FileText
-                              size={15}
-                              className="text-[#45829B]"
-                            />
+                    <p className="mt-2 text-[11px] text-[#859396]">
+                      Loading properties...
+                    </p>
+                  </td>
+                </tr>
+              ) : properties.length ? (
+                properties.map(
+                  (property) => {
+                    const partner =
+                      property
+                        ?.assignedPartner
+                        ?.partnerId;
+
+                    const imageCount =
+                      property.images
+                        ?.length || 0;
+
+                    const docCount =
+                      [
+                        property.floorPlan,
+                        property.reraCertificate,
+                      ].filter(
+                        Boolean
+                      ).length;
+
+                    const hasVideo =
+                      Boolean(
+                        property.video ||
+                          property.videoLink
+                      );
+
+                    return (
+                      <tr
+                        key={
+                          property._id
+                        }
+                        className="border-b border-[#EDF2F1] last:border-0 hover:bg-[#F9FCFB]"
+                      >
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-11 w-14 overflow-hidden rounded-md bg-[#EEF4F5]">
+                              {property
+                                .images?.[0]
+                                ?.url ? (
+                                <img
+                                  src={
+                                    property
+                                      .images[0]
+                                      .url
+                                  }
+                                  alt={
+                                    property.title
+                                  }
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-full items-center justify-center text-[#9BACAF]">
+                                  <Building2
+                                    size={16}
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            <div>
+                              <p className="max-w-[200px] text-[11px] font-bold text-[#304E56]">
+                                {property.title}
+                              </p>
+
+                              <p className="mt-1 text-[9px] font-semibold text-[#0B8B73]">
+                                {property.propertyId}
+                              </p>
+
+                              <p className="mt-1 text-[8px] text-[#98A4A7]">
+                                {property.category} • {property.transactionType}
+                              </p>
+                            </div>
                           </div>
+                        </td>
 
-                          <div className="min-w-0">
-                            <h3 className="truncate text-[12px] font-semibold text-[#24384C]">
-                              {property.propertyName}
-                            </h3>
-
-                            <p className="mt-0.5 text-[9px] text-[#81909D]">
-                              {property.location}
-                            </p>
-                          </div>
-                        </div>
-
-                        <button>
-                          <MoreVertical
-                            size={16}
-                            className="text-[#788691]"
-                          />
-                        </button>
-                      </div>
-
-                      <div className="mt-3 grid grid-cols-2 gap-3 rounded-md bg-[#F8FAFA] p-3">
-                        <MobileInfo
-                          label="Entity"
-                          value={property.entityName}
-                        />
-
-                        <MobileInfo
-                          label="Reviewer"
-                          value={
-                            property.reviewer?.name ||
-                            "Unassigned"
-                          }
-                        />
-                      </div>
-
-                      <div className="mt-3">
-                        <div className="mb-1.5 flex items-center justify-between">
-                          <p className="text-[9px] font-medium text-[#596B7A]">
-                            Verification Progress
+                        <td className="px-4 py-4">
+                          <p className="text-[10px] font-semibold text-[#50676D]">
+                            {property.city ||
+                              "—"}
                           </p>
 
-                          <span className="text-[9px] font-semibold text-[#047568]">
+                          <p className="mt-1 text-[9px] text-[#98A4A7]">
+                            {property.locality ||
+                              property.address ||
+                              "—"}
+                          </p>
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <p className="text-[10px] font-bold text-[#425E65]">
+                            {partner?.name ||
+                              property
+                                ?.assignedPartner
+                                ?.name ||
+                              "—"}
+                          </p>
+
+                          <p className="mt-1 text-[9px] text-[#0A8A72]">
+                            {partner?.partnerId ||
+                              property
+                                ?.assignedPartner
+                                ?.partnerCode ||
+                              "—"}
+                          </p>
+
+                          <p className="mt-1 text-[8px] text-[#98A4A7]">
+                            {partner?.partnerType ||
+                              property
+                                ?.assignedPartner
+                                ?.partnerType ||
+                              "—"}
+                          </p>
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[9px] font-bold text-emerald-600">
+                            <CheckCircle2
+                              size={10}
+                            />
                             {
-                              property.verificationProgress
+                              property.propertyVerificationStatus
                             }
-                            %
                           </span>
-                        </div>
+                        </td>
 
-                        <div className="h-1.5 overflow-hidden rounded-full bg-[#E4ECEA]">
-                          <div
-                            style={{
-                              width: `${property.verificationProgress}%`,
-                            }}
-                            className="h-full rounded-full bg-[#009688]"
-                          />
-                        </div>
-                      </div>
+                        <td className="px-4 py-4">
+                          <div className="flex flex-wrap gap-1">
+                            <MiniPill>
+                              <ImageIcon
+                                size={9}
+                              />
+                              {imageCount} images
+                            </MiniPill>
 
-                      <div className="mt-3 flex flex-wrap gap-1">
-                        {property.criticalIssues.length ? (
-                          property.criticalIssues.map(
-                            (issue) => (
-                              <span
-                                key={issue}
-                                className="rounded-full border border-red-100 bg-red-50 px-2 py-1 text-[8px] text-red-600"
-                              >
-                                {issue}
-                              </span>
-                            )
-                          )
-                        ) : (
-                          <span className="flex items-center gap-1 text-[9px] text-emerald-600">
-                            <CheckCircle2 size={12} />
-                            No critical issues
+                            <MiniPill>
+                              <FileText
+                                size={9}
+                              />
+                              {docCount} docs
+                            </MiniPill>
+
+                            <MiniPill>
+                              <Video size={9} />
+                              {hasVideo
+                                ? "Video"
+                                : "No video"}
+                            </MiniPill>
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <span
+                            className={`rounded-full border px-2 py-1 text-[9px] font-bold ${
+                              property.status ===
+                              "Live"
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-600"
+                                : "border-blue-200 bg-blue-50 text-blue-600"
+                            }`}
+                          >
+                            {property.status}
                           </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                        </td>
 
-          {/* FOOTER */}
+                        <td className="px-4 py-4">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openFinalReview(
+                                property._id
+                              )
+                            }
+                            className="flex items-center gap-1.5 rounded-lg border border-[#CDE0DC] bg-white px-3 py-2 text-[10px] font-bold text-[#167C69] hover:bg-[#F2FAF7]"
+                          >
+                            <Eye size={12} />
+                            {property.status ===
+                            "Live"
+                              ? "View Property"
+                              : "Final Review"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  }
+                )
+              ) : (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="py-16 text-center"
+                  >
+                    <Building2
+                      size={22}
+                      className="mx-auto text-[#A5B1B3]"
+                    />
 
-          <div className="flex items-center justify-between border-t border-[#E9EEED] px-3 py-3">
-            <p className="text-[8px] text-[#8794A0] sm:text-[9px]">
-              Showing 1 to {filteredProperties.length} of{" "}
-              {properties.length} items
-            </p>
+                    <p className="mt-2 text-[11px] font-semibold text-[#61777C]">
+                      No properties found
+                    </p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-            <div className="flex items-center gap-1">
-              <button className="flex h-7 min-w-7 items-center justify-center rounded border border-[#DCE3E2] bg-white text-[9px] text-[#697887]">
-                1
-              </button>
+        <div className="border-t border-[#EDF2F1] px-4 py-3 text-[9px] text-[#8A989C]">
+          Showing {properties.length} properties
+        </div>
+      </div>
+
+      {(selectedDetail ||
+        detailLoading) && (
+        <FinalReviewDrawer
+          data={selectedDetail}
+          loading={detailLoading}
+          actionLoading={
+            actionLoading
+          }
+          onClose={() =>
+            setSelectedDetail(null)
+          }
+          onMakeLive={makeLive}
+        />
+      )}
+    </div>
+  );
+}
+
+function FinalReviewDrawer({
+  data,
+  loading,
+  actionLoading,
+  onClose,
+  onMakeLive,
+}) {
+  const property =
+    data?.property;
+
+  const checks =
+    data?.checks || {};
+
+  const partner =
+    property?.assignedPartner
+      ?.partnerId;
+
+  if (loading) {
+    return (
+      <DrawerShell
+        onClose={onClose}
+      >
+        <div className="flex min-h-[500px] items-center justify-center">
+          <LoaderCircle
+            size={28}
+            className="animate-spin text-[#0B8B73]"
+          />
+        </div>
+      </DrawerShell>
+    );
+  }
+
+  if (!property) {
+    return (
+      <DrawerShell
+        onClose={onClose}
+      >
+        <div className="flex min-h-[500px] items-center justify-center text-[11px] text-[#8A989C]">
+          Property detail not available.
+        </div>
+      </DrawerShell>
+    );
+  }
+
+  return (
+    <DrawerShell
+      onClose={onClose}
+    >
+      <div className="space-y-4 p-5">
+        {/* PROPERTY HEADER */}
+        <div className="rounded-xl border border-[#DDE8E5] bg-white p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-[#0B8B73]">
+                {property.propertyId}
+              </p>
+
+              <h3 className="mt-1 text-[20px] font-bold text-[#173C46]">
+                {property.title}
+              </h3>
+
+              <p className="mt-1 flex items-center gap-1 text-[10px] text-[#819194]">
+                <MapPin size={11} />
+                {[
+                  property.locality,
+                  property.city,
+                  property.address,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+            </div>
+
+            <div className="flex flex-col items-start gap-2 sm:items-end">
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[9px] font-bold text-emerald-600">
+                Verification:{" "}
+                {
+                  property.propertyVerificationStatus
+                }
+              </span>
+
+              <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[9px] font-bold text-blue-600">
+                Status: {property.status}
+              </span>
             </div>
           </div>
         </div>
+
+        {/* FINAL CHECKS */}
+        <SectionCard
+          title="Final Publishing Checks"
+          icon={CheckCircle2}
+        >
+          <div className="grid gap-2 sm:grid-cols-2">
+            <CheckRow
+              label="Property Verified"
+              ok={
+                checks.propertyVerified
+              }
+            />
+
+            <CheckRow
+              label="Partner Assigned"
+              ok={
+                checks.partnerAssigned
+              }
+            />
+
+            <CheckRow
+              label="Assigned Partner Verified"
+              ok={
+                checks.partnerVerified
+              }
+            />
+
+            <CheckRow
+              label="Partner Not Blocked"
+              ok={
+                checks.partnerNotBlocked
+              }
+            />
+          </div>
+        </SectionCard>
+
+        {/* IMAGES */}
+        <SectionCard
+          title={`Property Images (${property.images?.length || 0})`}
+          icon={ImageIcon}
+        >
+          {property.images?.length ? (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {property.images.map(
+                (image) => (
+                  <a
+                    key={
+                      image._id ||
+                      image.url
+                    }
+                    href={image.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group relative h-28 overflow-hidden rounded-lg bg-slate-100"
+                  >
+                    <img
+                      src={image.url}
+                      alt={
+                        property.title
+                      }
+                      className="h-full w-full object-cover transition group-hover:scale-105"
+                    />
+                  </a>
+                )
+              )}
+            </div>
+          ) : (
+            <EmptyText>
+              No property images uploaded.
+            </EmptyText>
+          )}
+        </SectionCard>
+
+        {/* BASIC DETAIL */}
+        <SectionCard
+          title="Property Details"
+          icon={Building2}
+        >
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Detail
+              icon={IndianRupee}
+              label="Price"
+              value={formatMoney(
+                property.price
+              )}
+            />
+
+            <Detail
+              icon={Ruler}
+              label="Property Size"
+              value={`${property.propertySize || "—"} ${property.sizeUnit || ""}`}
+            />
+
+            <Detail
+              icon={BedDouble}
+              label="Bedrooms"
+              value={
+                property.bedrooms ||
+                "—"
+              }
+            />
+
+            <Detail
+              icon={Bath}
+              label="Bathrooms"
+              value={
+                property.bathrooms ||
+                "—"
+              }
+            />
+
+            <Detail
+              icon={Car}
+              label="Parking"
+              value={
+                property.parking ||
+                "—"
+              }
+            />
+
+            <Detail
+              icon={Layers3}
+              label="Floor"
+              value={`${property.floorNo ?? "—"} / ${property.totalFloors ?? "—"}`}
+            />
+
+            <Detail
+              icon={Compass}
+              label="Facing"
+              value={
+                property.facing ||
+                "—"
+              }
+            />
+
+            <Detail
+              icon={Sofa}
+              label="Furnishing"
+              value={
+                property.furnishing ||
+                "—"
+              }
+            />
+          </div>
+
+          <div className="mt-3 rounded-lg bg-[#F8FAFA] p-3">
+            <p className="text-[8px] font-bold uppercase text-[#8A989C]">
+              Description
+            </p>
+
+            <p className="mt-1 whitespace-pre-wrap text-[10px] leading-5 text-[#536A70]">
+              {property.description ||
+                "No description"}
+            </p>
+          </div>
+
+          {property.amenities?.length >
+            0 && (
+            <div className="mt-3">
+              <p className="mb-2 text-[8px] font-bold uppercase text-[#8A989C]">
+                Amenities
+              </p>
+
+              <div className="flex flex-wrap gap-1.5">
+                {property.amenities.map(
+                  (item) => (
+                    <span
+                      key={item}
+                      className="rounded-full bg-[#EDF8F5] px-2.5 py-1 text-[9px] font-semibold text-[#197C69]"
+                    >
+                      {item}
+                    </span>
+                  )
+                )}
+              </div>
+            </div>
+          )}
+        </SectionCard>
+
+        {/* PARTNER */}
+        <SectionCard
+          title="Assigned Partner"
+          icon={UserRound}
+        >
+          <div className="rounded-lg border border-[#E4ECEA] bg-[#FAFCFB] p-3">
+            <p className="text-[11px] font-bold text-[#35545C]">
+              {partner?.name ||
+                property
+                  ?.assignedPartner
+                  ?.name ||
+                "—"}
+            </p>
+
+            <p className="mt-1 text-[9px] font-semibold text-[#0B8B73]">
+              {partner?.partnerId ||
+                property
+                  ?.assignedPartner
+                  ?.partnerCode ||
+                "—"}
+            </p>
+
+            <p className="mt-2 text-[9px] text-[#819194]">
+              {partner?.email ||
+                property
+                  ?.assignedPartner
+                  ?.email ||
+                "—"}
+            </p>
+
+            <p className="mt-1 text-[9px] text-[#819194]">
+              {partner?.phone ||
+                property
+                  ?.assignedPartner
+                  ?.phone ||
+                "—"}
+            </p>
+          </div>
+        </SectionCard>
+
+        {/* DOCUMENTS */}
+        <SectionCard
+          title="Documents"
+          icon={FileText}
+        >
+          <div className="grid gap-2 sm:grid-cols-2">
+            <DocumentLink
+              label="Floor Plan"
+              url={
+                property.floorPlan
+              }
+            />
+
+            <DocumentLink
+              label="RERA Certificate"
+              url={
+                property.reraCertificate
+              }
+            />
+          </div>
+        </SectionCard>
+
+        {/* VIDEO */}
+        <SectionCard
+          title="Property Video"
+          icon={Video}
+        >
+          {property.video ? (
+            <video
+              controls
+              className="max-h-[320px] w-full rounded-lg bg-black"
+              src={property.video}
+            />
+          ) : property.videoLink ? (
+            <a
+              href={
+                property.videoLink
+              }
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 rounded-lg border border-[#D7E5E1] bg-[#F7FBFA] p-3 text-[10px] font-semibold text-[#137C69]"
+            >
+              <ExternalLink
+                size={12}
+              />
+              Open Video Link
+            </a>
+          ) : (
+            <EmptyText>
+              No property video uploaded.
+            </EmptyText>
+          )}
+        </SectionCard>
+
+        {/* REVIEW */}
+        <SectionCard
+          title="Verification Review"
+          icon={AlertCircle}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SimpleValue
+              label="Reviewed By"
+              value={
+                property.review
+                  ?.reviewedBy?.name ||
+                "—"
+              }
+            />
+
+            <SimpleValue
+              label="Reviewed At"
+              value={formatDate(
+                property.review
+                  ?.reviewedAt
+              )}
+            />
+          </div>
+
+          <div className="mt-3 rounded-lg bg-[#F8FAFA] p-3">
+            <p className="text-[8px] font-bold uppercase text-[#8A989C]">
+              Review Notes
+            </p>
+
+            <p className="mt-1 text-[10px] leading-5 text-[#536A70]">
+              {property.review
+                ?.notes ||
+                "No review notes"}
+            </p>
+          </div>
+        </SectionCard>
+
+        {/* HISTORY */}
+        <SectionCard
+          title="Status History"
+          icon={RefreshCw}
+        >
+          <div className="space-y-2">
+            {(property.statusHistory ||
+              [])
+              .slice()
+              .reverse()
+              .map((item) => (
+                <div
+                  key={item._id}
+                  className="border-l-2 border-[#CFE5DF] pl-3"
+                >
+                  <p className="text-[10px] font-bold text-[#36535B]">
+                    {item.status}
+                  </p>
+
+                  <p className="mt-0.5 text-[8px] text-[#8A989C]">
+                    {formatDate(
+                      item.updatedAt
+                    )}{" "}
+                    •{" "}
+                    {item.updatedBy
+                      ?.name || "—"}
+                  </p>
+
+                  {item.remarks && (
+                    <p className="mt-1 text-[9px] text-[#61777C]">
+                      {item.remarks}
+                    </p>
+                  )}
+                </div>
+              ))}
+          </div>
+        </SectionCard>
+
+        {/* ACTION */}
+        <div className="sticky bottom-0 -mx-5 border-t border-[#E2EBE9] bg-white p-4">
+          {property.status ===
+          "Live" ? (
+            <div className="flex items-center justify-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-[11px] font-bold text-emerald-600">
+              <Radio size={14} />
+              This property is currently Live
+            </div>
+          ) : (
+            <>
+              {!data?.canMakeLive && (
+                <div className="mb-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-[9px] text-amber-700">
+                  <AlertCircle
+                    size={13}
+                    className="mt-0.5 shrink-0"
+                  />
+                  Property cannot be published until verification and assigned-partner checks pass.
+                </div>
+              )}
+
+              <button
+                type="button"
+                disabled={
+                  !data?.canMakeLive ||
+                  actionLoading
+                }
+                onClick={
+                  onMakeLive
+                }
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#087C69] text-[11px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {actionLoading ? (
+                  <LoaderCircle
+                    size={14}
+                    className="animate-spin"
+                  />
+                ) : (
+                  <Radio
+                    size={14}
+                  />
+                )}
+
+                Final Review Complete & Make Live
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </DrawerShell>
+  );
+}
+
+function DrawerShell({
+  children,
+  onClose,
+}) {
+  return (
+    <div className="fixed inset-0 z-[999]">
+      <div
+        onClick={onClose}
+        className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"
+      />
+
+      <div className="absolute bottom-0 right-0 top-0 w-full max-w-[720px] overflow-y-auto bg-[#F6FAF9] shadow-[-12px_0_35px_rgba(15,23,42,0.16)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-[#E3EBE9] bg-white px-5 py-4">
+          <div>
+            <h2 className="text-[18px] font-bold text-[#173B45]">
+              Final Property Review
+            </h2>
+
+            <p className="mt-1 text-[10px] text-[#8A9A9D]">
+              Review property details, documents, images, video and assigned partner before publishing.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F3F6F5] text-[#63777B]"
+          >
+            <X size={15} />
+          </button>
+        </div>
+
+        {children}
       </div>
     </div>
   );
 }
 
-/* ================= HELPERS ================= */
-
-function TableHeading({ children }) {
+function TableHead({
+  children,
+}) {
   return (
-    <th className="px-3 py-3 text-left text-[8px] font-semibold uppercase tracking-[0.02em]">
+    <th className="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-wide">
       {children}
     </th>
   );
 }
 
-function DocumentStatus({ status }) {
-  if (status === "verified") {
-    return (
-      <span className="flex h-[14px] w-[14px] items-center justify-center rounded-full border border-[#12B76A] bg-[#ECFDF3]">
-        <CheckCircle2
-          size={9}
-          className="text-[#12B76A]"
-        />
-      </span>
-    );
-  }
-
-  if (status === "warning") {
-    return (
-      <span className="flex h-[14px] w-[14px] items-center justify-center rounded-full border border-[#F79009] bg-[#FFFAEB]">
-        <AlertCircle
-          size={9}
-          className="text-[#F79009]"
-        />
-      </span>
-    );
-  }
-
+function MiniPill({
+  children,
+}) {
   return (
-    <span className="flex h-[14px] w-[14px] items-center justify-center rounded-full border border-[#98A2B3] bg-[#F2F4F7]">
-      <Clock3
-        size={8}
-        className="text-[#98A2B3]"
-      />
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#F1F6F5] px-2 py-1 text-[8px] font-medium text-[#61777C]">
+      {children}
     </span>
   );
 }
 
-function FilterSelect({
-  value,
-  onChange,
-  options,
+function SectionCard({
+  title,
+  icon: Icon,
+  children,
 }) {
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) =>
-          onChange(e.target.value)
-        }
-        className="
-          h-8 appearance-none
-          rounded-[5px]
-          border border-[#D8DFE3]
-          bg-white
-          pl-3 pr-7
-          text-[8px]
-          text-[#566575]
-          outline-none
-        "
-      >
-        {options.map((option) => (
-          <option
-            key={option}
-            value={option}
-          >
-            {option}
-          </option>
-        ))}
-      </select>
+    <div className="rounded-xl border border-[#DDE8E5] bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center gap-2">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#EAF8F4] text-[#138B75]">
+          <Icon size={13} />
+        </div>
 
-      <ChevronDown
-        size={11}
-        className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#8794A0]"
-      />
+        <h4 className="text-[11px] font-bold text-[#31515A]">
+          {title}
+        </h4>
+
+        <div className="h-px flex-1 bg-[#EDF2F1]" />
+      </div>
+
+      {children}
     </div>
   );
 }
 
-function MobileInfo({ label, value }) {
+function CheckRow({
+  label,
+  ok,
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-[#E5ECEA] bg-[#FAFCFB] p-2.5">
+      {ok ? (
+        <CheckCircle2
+          size={13}
+          className="text-emerald-500"
+        />
+      ) : (
+        <AlertCircle
+          size={13}
+          className="text-amber-500"
+        />
+      )}
+
+      <span className="text-[9px] font-semibold text-[#51676D]">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function Detail({
+  icon: Icon,
+  label,
+  value,
+}) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-[#E5ECEA] bg-[#FAFCFB] p-3">
+      <Icon
+        size={13}
+        className="mt-0.5 text-[#16806C]"
+      />
+
+      <div>
+        <p className="text-[8px] font-bold uppercase text-[#98A4A7]">
+          {label}
+        </p>
+
+        <p className="mt-1 text-[10px] font-semibold text-[#435D64]">
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function DocumentLink({
+  label,
+  url,
+}) {
+  if (!url) {
+    return (
+      <div className="rounded-lg border border-dashed border-[#DCE5E3] p-3">
+        <p className="text-[9px] font-semibold text-[#75868B]">
+          {label}
+        </p>
+
+        <p className="mt-1 text-[8px] text-[#A0ACAF]">
+          Not uploaded
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="flex items-center justify-between rounded-lg border border-[#D7E5E1] bg-[#F7FBFA] p-3"
+    >
+      <div>
+        <p className="text-[9px] font-bold text-[#486169]">
+          {label}
+        </p>
+
+        <p className="mt-1 text-[8px] text-[#0A8A72]">
+          View document
+        </p>
+      </div>
+
+      <ExternalLink
+        size={12}
+        className="text-[#16806C]"
+      />
+    </a>
+  );
+}
+
+function SimpleValue({
+  label,
+  value,
+}) {
   return (
     <div>
-      <p className="text-[8px] uppercase tracking-wide text-[#98A2AD]">
+      <p className="text-[8px] font-bold uppercase text-[#98A4A7]">
         {label}
       </p>
 
-      <p className="mt-1 truncate text-[9px] font-medium text-[#475B6D]">
+      <p className="mt-1 text-[10px] font-semibold text-[#486169]">
         {value}
       </p>
     </div>
   );
 }
 
-function EmptyState() {
+function EmptyText({
+  children,
+}) {
   return (
-    <div className="flex flex-col items-center justify-center py-16">
-      <FileText
-        size={35}
-        className="text-gray-300"
-      />
-
-      <p className="mt-3 text-xs font-medium text-gray-500">
-        No properties found
-      </p>
-
-      <p className="mt-1 text-[9px] text-gray-400">
-        Try changing your filters.
-      </p>
+    <div className="rounded-lg border border-dashed border-[#DCE5E3] py-6 text-center text-[9px] text-[#95A2A5]">
+      {children}
     </div>
   );
 }

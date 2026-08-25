@@ -82,17 +82,17 @@ const navItems = [
     ),
   },
 
-  {
-    label: "Users",
-    path: "/user",
-    icon: (
-      <MdOutlineShield size={20} />
-    ),
-  },
+  // {
+  //   label: "Users",
+  //   path: "/user",
+  //   icon: (
+  //     <MdOutlineShield size={20} />
+  //   ),
+  // },
 
   {
-    label: "Wallet Credits",
-    path: "/wallet-credits",
+    label: "Credits",
+    path: "/credits",
     icon: (
       <MdOutlineShield size={20} />
     ),

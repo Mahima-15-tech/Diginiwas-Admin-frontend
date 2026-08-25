@@ -1,42 +1,48 @@
 import { useState } from 'react';
-import PropertyAuditHistory from './PropertyHistory';
-import PropertyCommandCenter from './PropertyCommandCenter';
-import PropertyVerificationCenter from './PropertyVerification';
-import PropertyDashboard from './PropertyApproval';
+import Credit from './WalletCredits'
+import Boost from './BoostPropertyPartnerDashboard'
+import Featured from './FeaturedPromotionManagement';
+import Locality from './LocalityTopPromotionManagement'
+import CreditPlan from './CreditPricingManagement'
 // Dynamic tabs configuration
 const navigationData = {
-  'approval': {
-    label: 'Approval Center',
+  'CreditPlan': {
+    label: 'Credit Pricing Management',
     subTabs: [
-      { id: 'application', label: 'Partner Assignment', component: <PropertyDashboard /> },
+      { id: 'CreditPlan', label: 'Credit Pricing Management', component: <CreditPlan /> },
     ]
   },
-   'application': {
-    label: 'Verification Center',
+  'credit': {
+    label: 'Credit Management',
     subTabs: [
-      { id: 'application', label: 'Partner Assignment', component: <PropertyVerificationCenter /> },
+      { id: 'credit', label: 'Credit Management', component: <Credit /> },
     ]
   },
-  'promotions': {
-    label: 'Audit & History',
+'boost': {
+    label: 'Boost Management',
     subTabs: [
-      { id: 'dashboard', label: 'Partner Management', component: <PropertyAuditHistory /> },
+      { id: 'boost', label: 'Boost Management', component: <Boost /> },
     ]
   },
-  // 'assignment': {
-  //   label: 'Command Center',
-  //   subTabs: [
-  //     { id: 'assignment', label: 'Partner Assignment', component: <PropertyCommandCenter /> },
-  //   ]
-  // },
- 
+ 'Featured': {
+    label: 'Featured Management',
+    subTabs: [
+      { id: 'Featured', label: 'Featured Management', component: <Featured /> },
+    ]
+  },
+  'Locality': {
+    label: 'Locality Management',
+    subTabs: [
+      { id: 'Locality', label: 'Locality Management', component: <Locality /> },
+    ]
+  },
   
 
 };
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('approval');
-  const [activeSubTab, setActiveSubTab] = useState('application');
+  const [activeTab, setActiveTab] = useState('credit');
+  const [activeSubTab, setActiveSubTab] = useState('credit');
 
   const currentCategory = navigationData[activeTab];
   const activeSubTabItem = currentCategory.subTabs.find(st => st.id === activeSubTab) || currentCategory.subTabs[0];
@@ -48,7 +54,7 @@ export default function Dashboard() {
       <div className="bg-white p-6 rounded-2xl flex justify-between items-center border border-slate-200/60 shadow-sm">
         <div>
           <h1 className="text-2xl font-extrabold text-[#005F56] mt-0.5">
-            PROPERTY SECTION
+            CREDIT SECTION
           </h1>
         </div>
         <div className="bg-[#005F56] text-white px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide shadow-sm">
