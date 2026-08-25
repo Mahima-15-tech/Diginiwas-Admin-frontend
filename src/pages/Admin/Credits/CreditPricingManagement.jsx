@@ -23,7 +23,7 @@ import {
   getCreditSettingsApi,
   updateCreditSettingsApi,
   resetCreditSettingsApi,
-} from "../../../services/creditSettingService";
+} from "../../../Services/creditSettingService";
 
 const PRODUCT_GROUPS = [
   {
